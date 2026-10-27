@@ -7,11 +7,9 @@
 <p align="center">Transforme imagens de quadros de coordenadas e memoriais em uma lista de pontos e um contorno para o AutoCAD.</p>
 
 <!-- download:start -->
-## Download para Windows
+## [⬇ Baixar SnapPlot para Windows](https://github.com/Andre-ARS/SnapPlot_Releases/releases/latest/download/SnapPlot-Setup.exe)
 
-**O primeiro instalador está em preparação.** Quando publicado, o download direto aparecerá aqui.
-
-[Acompanhar as versões disponíveis](https://github.com/Andre-ARS/SnapPlot_Releases/releases)
+Versão estável disponível: **0.6.0** · Windows 10/11 · 64 bits
 <!-- download:end -->
 
 ## Da imagem ao desenho
