@@ -6,12 +6,6 @@
 <p align="center"><strong>From image to outline.</strong></p>
 <p align="center">Transforme imagens de quadros de coordenadas e memoriais em uma lista de pontos e um contorno para o AutoCAD.</p>
 
-<!-- download:start -->
-## [⬇ Baixar SnapPlot para Windows](https://github.com/Andre-ARS/SnapPlot_Releases/releases/latest/download/SnapPlot-Setup.exe)
-
-Versão estável disponível: **0.6.0** · Windows 10/11 · 64 bits
-<!-- download:end -->
-
 ## Da imagem ao desenho
 
 1. Adicione uma imagem, arraste capturas para a janela ou cole com **Ctrl+V**.
