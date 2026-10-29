@@ -10,10 +10,10 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font:13px "Segoe UI",Arial,sans-serif;color:var(--ink);overflow:hidden}
 button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid #b8c1cc;border-radius:4px;background:#f9fafb;color:var(--ink);padding:7px 10px;white-space:nowrap}
 button:hover{background:#e9eef3}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-button:disabled{cursor:default;opacity:.42}button.primary{background:var(--teal);color:white;border-color:var(--teal)}button.primary:hover{background:#096a75}
+button:disabled{opacity:.42}button:disabled,input:disabled,select:disabled,textarea:disabled{cursor:not-allowed}button.primary{background:var(--teal);color:white;border-color:var(--teal)}button.primary:hover{background:#096a75}
 button.icon{width:32px;height:30px;padding:5px;display:inline-grid;place-items:center;background:#fff}
 button.icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-button.danger{color:#b52b2b}label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}input[type=checkbox]{accent-color:var(--teal)}
+button.danger{color:#b52b2b}label{display:inline-flex;align-items:center;gap:5px;cursor:pointer}input[type=checkbox]{accent-color:var(--teal)}a,select:not(:disabled),input[type=checkbox]:not(:disabled),input[type=file]:not(:disabled){cursor:pointer}input:not([type=checkbox]):not([type=file]):not(:disabled),textarea:not(:disabled){cursor:text}
 .prototype-bar{height:31px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#e8edf2;border-bottom:1px solid var(--border);font-size:11px;color:#536276}
 .prototype-bar strong{font-size:10px;letter-spacing:.08em}.prototype-bar .spacer{flex:1}.prototype-bar button{padding:3px 8px;font-size:11px;background:transparent}
 .app{height:calc(100vh - 31px);display:flex;flex-direction:column}.titlebar{height:27px;display:flex;align-items:center;padding:0 12px;gap:7px;font-size:11px;color:#4e5b68;background:#fafafa;flex:none}
@@ -55,7 +55,7 @@ tbody tr:hover{filter:brightness(.97)}.table-actions{display:flex;gap:5px;flex-w
 .footer{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:9px 14px 11px;flex:none}.footer p{font-size:11px;color:var(--muted);margin:0}.exports{display:flex;gap:6px}.exports button{font-size:12px}
 body.contour-expanded .contour-panel{position:fixed;inset:0;width:100vw;height:100vh;min-height:0;z-index:50;border:0;border-radius:0}
 body.contour-expanded .contour-controls{display:none}body.contour-expanded .expanded-options{display:flex}
-body.contour-expanded .compass{display:block}body.contour-expanded .contour-canvas{cursor:grab}body.contour-expanded .contour-canvas.dragging{cursor:grabbing}
+body.contour-expanded .compass{display:block}body.contour-expanded .contour-canvas{cursor:grab}body.contour-expanded .contour-canvas.over-point{cursor:pointer}body.contour-expanded .contour-canvas.dragging{cursor:grabbing}
 body.table-expanded .titlebar,body.table-expanded .brand,body.table-expanded .toolbar,body.table-expanded .footer,body.table-expanded .contour-panel,body.table-expanded .hidden-preview{display:none!important}
 body.table-expanded .workspace{padding-top:12px;padding-bottom:12px;grid-template-columns:44% 1fr}body.table-expanded .source-pages{padding-bottom:0}
 dialog{border:1px solid #cdd6e0;border-radius:10px;box-shadow:0 20px 90px #0d223344;color:var(--ink);padding:0;width:min(410px,calc(100vw - 32px));background:#fff}
@@ -196,11 +196,16 @@ $('moveUp').onclick=function(){moveRow(-1)};$('moveDown').onclick=function(){mov
 document.querySelectorAll('[data-tab]').forEach(function(button){button.onclick=function(){setTab(button.dataset.tab)}});
 $('closeContour').onchange=function(){closed=this.checked;render()};$('showContour').onchange=function(){setPreview(this.checked)};$('showHidden').onchange=function(){setPreview(true)};$('showLabels').onchange=function(){labels=this.checked;draw()};
 $('expandContour').onclick=function(){setMode(expanded?'normal':'contour')};$('expandTable').onclick=function(){setMode(tableExpanded?'normal':'table')};$('fitContour').onclick=function(){zoom=1;pan={x:0,y:0};hideMenu();draw()};
-const canvas=$('contourSvg');canvas.addEventListener('wheel',function(e){if(!expanded||!bounds)return;e.preventDefault();hideMenu();const rect=canvas.getBoundingClientRect(),px=e.clientX-rect.left-bounds.w/2,py=e.clientY-rect.top-bounds.h/2;const next=Math.max(.2,Math.min(20,zoom*Math.exp(-e.deltaY*.0015))),factor=next/zoom;pan.x=px-(px-pan.x)*factor;pan.y=py-(py-pan.y)*factor;zoom=next;draw()},{passive:false});
+const canvas=$('contourSvg');
+function contourPointAt(e){if(!expanded)return null;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let best=null,distance=11;drawn.forEach(function(p){const d=Math.hypot(p.x-x,p.y-y);if(d<distance){distance=d;best=p}});return best}
+function updateContourCursor(e){canvas.classList.toggle('over-point',!drag&&!!contourPointAt(e))}
+canvas.addEventListener('wheel',function(e){if(!expanded||!bounds)return;e.preventDefault();hideMenu();const rect=canvas.getBoundingClientRect(),px=e.clientX-rect.left-bounds.w/2,py=e.clientY-rect.top-bounds.h/2;const next=Math.max(.2,Math.min(20,zoom*Math.exp(-e.deltaY*.0015))),factor=next/zoom;pan.x=px-(px-pan.x)*factor;pan.y=py-(py-pan.y)*factor;zoom=next;draw();updateContourCursor(e)},{passive:false});
 canvas.addEventListener('pointerdown',function(e){if(!expanded||e.button!==0)return;hideMenu();drag={x:e.clientX,y:e.clientY,panX:pan.x,panY:pan.y,moved:false};canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',function(e){if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>4)drag.moved=true;if(drag.moved){pan={x:drag.panX+dx,y:drag.panY+dy};canvas.classList.add('dragging');draw()}});
-canvas.addEventListener('pointerup',function(e){if(!drag)return;const moved=drag.moved;drag=null;canvas.classList.remove('dragging');if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(moved)return;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let best=null,distance=11;drawn.forEach(function(p){const d=Math.hypot(p.x-x,p.y-y);if(d<distance){distance=d;best=p}});if(best)selectPoint(best.id,true)});
-canvas.addEventListener('pointercancel',function(){drag=null;canvas.classList.remove('dragging')});
+canvas.addEventListener('pointermove',function(e){if(!drag){updateContourCursor(e);return}const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>4)drag.moved=true;if(drag.moved){pan={x:drag.panX+dx,y:drag.panY+dy};canvas.classList.remove('over-point');canvas.classList.add('dragging');draw()}});
+canvas.addEventListener('pointerup',function(e){if(!drag)return;const moved=drag.moved;drag=null;canvas.classList.remove('dragging');if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);updateContourCursor(e);if(moved)return;const best=contourPointAt(e);if(best)selectPoint(best.id,true)});
+canvas.addEventListener('pointerenter',updateContourCursor);
+canvas.addEventListener('pointerleave',function(){canvas.classList.remove('over-point')});
+canvas.addEventListener('pointercancel',function(){drag=null;canvas.classList.remove('dragging','over-point')});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('editDialog').open&&!$('loading').open&&!$('iconsDialog').open){hideMenu();if(expanded||tableExpanded)setMode('normal')}if(e.key==='Delete'&&expanded&&!$('editDialog').open&&!$('loading').open){e.preventDefault();deleteSelected()}});
 function showLoading(kind,count){
  if($('loading').open)return;
